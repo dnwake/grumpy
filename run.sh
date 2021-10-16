@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "$0")"
-git checkout -f working_version
+git reset --hard
 kubectl delete validatingwebhookconfiguration grumpy
 kubectl delete pod smooth-app not-smooth-app
 kubectl delete secret grumpy
