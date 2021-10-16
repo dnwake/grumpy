@@ -17,7 +17,7 @@ openssl genrsa -out certs/grumpy-key.pem 2048
 openssl req -new -key certs/grumpy-key.pem -subj "/CN=grumpy.default.svc" -out grumpy.csr -config certs/grumpy_config.txt
 
 # CREATE THE CERT SIGNING THE CSR WITH THE CA CREATED BEFORE
-openssl x509 -req -in grumpy.csr -CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial -out certs/grumpy-crt.pem
+openssl x509 -req -in grumpy.csr -CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial -out certs/grumpy-crt.pem -extensions v3_req -extfile certs/grumpy_config.txt
 
 # INJECT CA IN THE WEBHOOK CONFIGURATION
 export CA_BUNDLE=$(cat certs/ca.crt | base64 | tr -d '\n')
