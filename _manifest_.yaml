@@ -14,15 +14,16 @@ spec:
   selector:
     name: grumpy 
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grumpy
   namespace: default
-  labels:
-    name: grumpy
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      name: grumpy
   template:
     metadata:
       name: grumpy 
