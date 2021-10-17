@@ -40,13 +40,13 @@ spec:
             - -c
             - ./usr/bin/grumpy -alsologtostderr --log_dir=/ -v=10 2>&1
           env:
-	    - name: POD_NAME
-	      valueFrom:
-	        fieldRef:
-		  fieldPath: metadata.name
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           securityContext:
-	    capabilities:
-	      drop: ["FSETID", "FOWNER", "MKNOD", "SETPCAP", "SYS_CHROOT", "KILL", "AUDIT_WRITE"]
+            capabilities:
+              drop: ["FSETID", "FOWNER", "MKNOD", "SETPCAP", "SYS_CHROOT", "KILL", "AUDIT_WRITE"]
           resources:
             limits:
               memory: 50Mi
