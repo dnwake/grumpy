@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"strings"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -37,7 +38,7 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, "")
 }	
 
-func processRequest (r *admissionv1.AdmissionRequest) (bool, string) {
+func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, string) {
 	pod, err := parsePod(admissionRequest.Object.Raw)
 	if err != nil {
 	     	return false, err.Error()
