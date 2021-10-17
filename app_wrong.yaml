@@ -4,5 +4,7 @@ metadata:
   name: not-smooth-app
 spec:
   containers:
-  - image: busybox
+  - image: busybox:good
     name: not-smooth-app
+  - image: busybox:bad
+    name: not-smooth-app    
