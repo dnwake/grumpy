@@ -88,7 +88,8 @@ func parseIncomingRequest(r *http.Request) (admissionv1.AdmissionReview, error) 
 
 	var incomingReview admissionv1.AdmissionReview
 	body, err := ioutil.ReadAll(r.Body)
-	zap.L().Info("Incoming request content: ", zap.String("content", string(body)))
+	fmt.Print("Incoming request content: ")
+	fmt.Print(string(body))
 	if err != nil {
 		return incomingReview, err
 	}
