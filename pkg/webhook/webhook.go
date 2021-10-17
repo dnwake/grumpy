@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+        v1 "k8s.io/api/core/v1"	
 )
 
 var codec = serializer.NewCodecFactory(runtime.NewScheme())
@@ -31,26 +32,21 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	admissionRequest := admissionReview.Request
-
-	// parse the request into an PodInteraction object and add it to channel for controller to process
-	admit := true
-        object := admissionRequest.Object
-	spec := object.Spec
-	containers := spec.Containers
-	for i, container := range containers {
-          if container.Image == "bad" {
-	    admit := false
-	  }
-        }
-	//podName := admissionRequest.Name
-
-        //admit := (podName == "smooth-app")
-
-        //object :- admissionRequest.Object
-
+	admit, message = processRequest(admissionRequest)
 	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, "")
+}	
+
+func processRequest (r *admissionv1.AdmissionRequest) {
+	pod, err := parsePod(admissionRequest.Object.Raw)
+	if err != nil {
+	     	return false, err.Error()
+        }
+	for _, c := range pod.Spec.Containers {
+	    	if strings.HasSuffix(c.Image, ":bad") {
+		    	return (false, "You cannot use the tag 'bad' in a container."}, nil
+		}
+ 	return true, ""
 }
 
 // writeAdmitResponse sends an allowed or disallowed response with additional message to the given admission request.
@@ -98,8 +94,8 @@ func parseIncomingRequest(r *http.Request) (admissionv1.AdmissionReview, error) 
 
 	var incomingReview admissionv1.AdmissionReview
 	body, err := ioutil.ReadAll(r.Body)
-	fmt.Print("Incoming request content: ")
-	fmt.Print(string(body))
+//	fmt.Print("Incoming request content: ")
+//	fmt.Print(string(body))
 	if err != nil {
 		return incomingReview, err
 	}
@@ -112,3 +108,11 @@ func parseIncomingRequest(r *http.Request) (admissionv1.AdmissionReview, error) 
 	return incomingReview, nil
 }
 
+func parsePod(object []byte) (*v1.Pod, error) {
+	var pod v1.Pod
+	if err := json.Unmarshal(object, &pod); err != nil {
+		return nil, err
+	}
+
+	return &pod, nil
+}
