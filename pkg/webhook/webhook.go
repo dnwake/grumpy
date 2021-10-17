@@ -33,7 +33,7 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	admissionRequest := admissionReview.Request
-	admit, message = processRequest(admissionRequest)
+	admit, message := processRequest(admissionRequest)
 	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, "")
 }	
 
