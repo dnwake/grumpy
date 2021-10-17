@@ -2,6 +2,7 @@
 
 cd "$(dirname "$0")"
 git reset --hard
+git clean -fdxq
 output="$(build-image . | tee /dev/stderr)"
 new_tag="$(echo "$output" | grep "Using image name" | grep -oP "and tags .*" | grep -oP "\"[^\"]+" | grep -oP "[^\"]+" | head -n 1)"
 new_image="box-registry.jfrog.io/jenkins/grumpy:$new_tag"
