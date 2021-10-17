@@ -34,11 +34,11 @@ spec:
         - name: webhook
           image: pipo02mix/grumpy:1.0.0
           imagePullPolicy: Always
-          args:
-            - -alsologtostderr
-            - --log_dir=/
-            - -v=10
-            - 2>&1
+	  command:
+	    - runascontainer
+	    - bin/bash
+	    - -c
+	    - ./usr/bin/grumpy -alsologtostderr --log_dir=/ -v=10 2>&1
           resources:
             limits:
               memory: 50Mi
