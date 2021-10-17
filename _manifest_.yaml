@@ -46,14 +46,7 @@ spec:
 		  fieldPath: metadata.name
           securityContext:
 	    capabilities:
-	      drop:
-	        - FSETID
-		- FOWNER
-		- MKNOD
-		- SETPCAP
-		- SYS_CHROOT
-		- KILL
-		- AUDIT_WRITE
+	      drop: ["FSETID", "FOWNER", "MKNOD", "SETPCAP", "SYS_CHROOT", "KILL", "AUDIT_WRITE"]
           resources:
             limits:
               memory: 50Mi
