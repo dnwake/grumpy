@@ -67,6 +67,9 @@ metadata:
   name: grumpy
 webhooks:
   - name: grumpy.pipo02mix.org
+    admissionReviewVersions:
+      - v1
+      - v1beta1
     clientConfig:
       service:
         name: grumpy
@@ -79,3 +82,4 @@ webhooks:
         apiVersions: ["v1"]
         resources: ["pods"]
     failurePolicy: Ignore
+    sideEffects: None
