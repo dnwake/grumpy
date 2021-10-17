@@ -38,6 +38,8 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 
         admit := (podName == "smooth-app")
 
+        //object :- admissionRequest.Object
+
 	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, "")
 }
 
@@ -86,6 +88,7 @@ func parseIncomingRequest(r *http.Request) (admissionv1.AdmissionReview, error) 
 
 	var incomingReview admissionv1.AdmissionReview
 	body, err := ioutil.ReadAll(r.Body)
+	zap.L().Info("Incoming request content: ", string(body)")
 	if err != nil {
 		return incomingReview, err
 	}
