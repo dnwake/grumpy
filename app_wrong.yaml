@@ -7,4 +7,4 @@ spec:
   - image: busybox:good
     name: not-smooth-app
   - image: busybox:bad
-    name: not-smooth-app    
+    name: not-smooth-app-2    
