@@ -38,7 +38,7 @@ spec:
             - runascontainer
             - /usr/bin/bash
             - -c
-            - ./usr/bin/grumpy -alsologtostderr --log_dir=/ -v=10 2>&1
+            - ./usr/bin/grumpy 2>&1
           env:
             - name: POD_NAME
               valueFrom:
