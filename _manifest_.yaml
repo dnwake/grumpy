@@ -34,11 +34,11 @@ spec:
         - name: webhook
           image: pipo02mix/grumpy:1.0.0
           imagePullPolicy: Always
-	  command:
-	    - runascontainer
-	    - bin/bash
-	    - -c
-	    - ./usr/bin/grumpy -alsologtostderr --log_dir=/ -v=10 2>&1
+          command:
+            - runascontainer
+            - bin/bash
+            - -c
+            - ./usr/bin/grumpy -alsologtostderr --log_dir=/ -v=10 2>&1
           resources:
             limits:
               memory: 50Mi
@@ -61,7 +61,7 @@ spec:
         - name: logs
           emptyDir: {}
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: grumpy
