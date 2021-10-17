@@ -41,7 +41,7 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	// parse the request into an PodInteraction object and add it to channel for controller to process
 	podName := admissionRequest.Name
 
-        admit := (podName == "smooth-app"))
+        admit := (podName == "smooth-app")
 
 	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, "")
 }
