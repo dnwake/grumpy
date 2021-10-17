@@ -1,14 +1,27 @@
 package webhook
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
+	"time"
 
+	"go.uber.org/zap"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+)
+
+var codec = serializer.NewCodecFactory(runtime.NewScheme())
+
+const (
+	PodExecAdmissionRequestKind   = "PodExecOptions"
+	PodAttachAdmissionRequestKind = "PodAttachOptions"
 )
 
 //GrumpyServerHandler listen to admission requests and serve responses
@@ -16,57 +29,77 @@ type GrumpyServerHandler struct {
 }
 
 func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
-	var body []byte
-	if r.Body != nil {
-		if data, err := ioutil.ReadAll(r.Body); err == nil {
-			body = data
-		}
-	}
-	if len(body) == 0 {
-		fmt.Printf("empty body")
-		http.Error(w, "empty body", http.StatusBadRequest)
-		return
-	}
-	fmt.Printf("Received request")
-
-	if r.URL.Path != "/validate" {
-		fmt.Printf("no validate")
-		http.Error(w, "no validate", http.StatusBadRequest)
+	admissionReview, err := parseIncomingRequest(r)
+	if err != nil || admissionReview.Request == nil {
+		zap.L().Error("Received a bad request when admitting Pod interaction", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	arRequest := admissionv1.AdmissionReview{}
-	if err := json.Unmarshal(body, &arRequest); err != nil {
-		fmt.Printf("incorrect body")
-		http.Error(w, "incorrect body", http.StatusBadRequest)
-	}
+	admissionRequest := admissionReview.Request
 
-	raw := arRequest.Request.Object.Raw
-	pod := corev1.Pod{}
-	if err := json.Unmarshal(raw, &pod); err != nil {
-		fmt.Printf("error deserializing pod")
-		return
-	}
-	if pod.Name == "smooth-app" {
-		return
-	}
+	// parse the request into an PodInteraction object and add it to channel for controller to process
+	podName := admissionRequest.Name
 
-	arResponse := admissionv1.AdmissionReview{
+        admit := (podName == "smooth-app"))
+
+	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, "")
+}
+
+// writeAdmitResponse sends an allowed or disallowed response with additional message to the given admission request.
+func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview admissionv1.AdmissionReview, isAllowed bool, message string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	outgoingReview := admissionv1.AdmissionReview{
+		TypeMeta: incomingReview.TypeMeta,
 		Response: &admissionv1.AdmissionResponse{
-			Allowed: false,
-			Result: &metav1.Status{
-				Message: "Keep calm and not add more crap in the cluster!",
-			},
+			Allowed: isAllowed,
 		},
 	}
-	resp, err := json.Marshal(arResponse)
+
+	if incomingReview.Request != nil {
+		outgoingReview.Response.UID = incomingReview.Request.UID
+	}
+
+	// add a message with 403 HTTP status code when rejecting a request
+	if !isAllowed {
+		outgoingReview.Response.Result = &metav1.Status{
+			Code:    http.StatusForbidden,
+			Message: message,
+		}
+	}
+
+	response, err := json.Marshal(outgoingReview)
 	if err != nil {
-		fmt.Printf("Can't encode response: %v", err)
-		http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
+		zap.L().Error("Error in marshaling outgoing admission review, returning 500", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-	fmt.Printf("Ready to write reponse ...")
-	if _, err := w.Write(resp); err != nil {
-		fmt.Printf("Can't write response: %v", err)
-		http.Error(w, fmt.Sprintf("could not write response: %v", err), http.StatusInternalServerError)
+
+	if _, err = w.Write(response); err != nil {
+		zap.L().Error("Error in writing an admit response, returning 500", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(statusCode)
 }
+
+// parseIncomingRequest parses the incoming request body and returns an admission.AdmissionReview object.
+func parseIncomingRequest(r *http.Request) (admissionv1.AdmissionReview, error) {
+	defer r.Body.Close()
+
+	var incomingReview admissionv1.AdmissionReview
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return incomingReview, err
+	}
+
+	deserializer := codec.UniversalDeserializer()
+	if _, _, err := deserializer.Decode(body, nil, &incomingReview); err != nil {
+		return incomingReview, err
+	}
+
+	return incomingReview, nil
+}
+
