@@ -46,6 +46,7 @@ func processRequest (r *admissionv1.AdmissionRequest) {
 	    	if strings.HasSuffix(c.Image, ":bad") {
 		    	return false, "You cannot use the tag 'bad' in a container."
 		}
+	}
  	return true, ""
 }
 
