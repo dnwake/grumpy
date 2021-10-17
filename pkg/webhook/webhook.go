@@ -44,7 +44,7 @@ func processRequest (r *admissionv1.AdmissionRequest) {
         }
 	for _, c := range pod.Spec.Containers {
 	    	if strings.HasSuffix(c.Image, ":bad") {
-		    	return (false, "You cannot use the tag 'bad' in a container."}, nil
+		    	return false, "You cannot use the tag 'bad' in a container."}, nil
 		}
  	return true, ""
 }
