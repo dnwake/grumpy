@@ -12,6 +12,8 @@ LABEL com.box.name=${APP_NAME}
 LABEL maintainer="pass-team@box.com"
 COPY --from=build /build/${APP_NAME} /usr/bin
 RUN chmod +x /usr/bin/${APP_NAME}
+RUN yum -y install notary
+COPY ./notary /tmp/notary
 
 ## 
 ## 
