@@ -49,7 +49,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 	var patches []patch.PatchOperation
 	re := regexp.MustCompile(":bad$")
 	for i, c := range pod.Spec.Containers {
-		zap.L().Info("Processing Container", zap.string("Image", c.Image))
+		zap.L().Info("Processing Container", zap.String("Image", c.Image))
 	    	if re.MatchString(c.Image) {
 		        newImage := re.ReplaceAllString(c.Image, ":good")
 			path := fmt.Sprintf("/spec/containers/%d/image", i)
