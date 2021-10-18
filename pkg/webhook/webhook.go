@@ -80,7 +80,7 @@ func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview ad
 	}
 
 	// set the patch operations for mutating admission
-	if patches != nil and len(patches) > 0 {
+	if patches != nil && len(patches) > 0 {
 		patchBytes, err := json.Marshal(patches)
 		if err != nil {
 			log.Error(err)
