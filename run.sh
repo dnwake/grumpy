@@ -22,7 +22,7 @@ kubectl create secret generic grumpy -n default  --from-file=key.pem=certs/grump
 sed -i "s|pipo02mix/grumpy:1.0.0|localhost:5000/grumpy:$new_tag|g" manifest.yaml
 kubectl apply -f  manifest.yaml
 kubectl rollout status deployment grumpy
-echo "This should fail"
 kubectl apply -f app_wrong.yaml
-echo "This should succeed"
-kubectl apply -f app_ok.yaml 
+kubectl apply -f app_ok.yaml
+echo "'bad' should be changed to 'good'"
+kubectl get pod -o json not-smooth-app | grep image
