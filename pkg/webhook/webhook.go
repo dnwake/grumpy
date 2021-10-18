@@ -1,7 +1,6 @@
 package webhook
 
 import (
-	"regexp"
 	"fmt"	
 	"encoding/json"
 	"io/ioutil"
@@ -51,8 +50,8 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 	var patches []patch.PatchOperation
 	for i, c := range pod.Spec.Containers {
 		fmt.Printf("Processing Container Image '%s\n", c.Image)
-		img, tag = parseImage(c.Image)
-		cmd = Sprintf("/usr/local/notary-utils/notary-utils/bin/notary-lookup-without-env %s %s", img, tag)
+		img, tag := parseImage(c.Image)
+		cmd := fmt.Sprintf("/usr/local/notary-utils/notary-utils/bin/notary-lookup-without-env %s %s", img, tag)
 		if output, err := runCmd(cmd); err != nil {
 			annotationMessage := fmt.Sprintf("Unable to look up digest for image '%s'; error was '%s'\n", c.Image, err.Error())
 			annotationPath := fmt.Sprintf("container.%d.image.error", i)
@@ -75,7 +74,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
  	return true, "", patches
 }
 
-func parseImage(string image)(string, string) {
+func parseImage(image string) (string, string) {
 	lastInd := strings.LastIndex(image, ":")
 	if lastInd >= 0 {
             img = c.Image[:lastInd]
@@ -171,7 +170,7 @@ func parsePod(object []byte) (*v1.Pod, error) {
 	return &pod, nil
 }
 
-func runCmd(string command) (string, error) {
+func runCmd(command string) (string, error) {
     cmd := exec.Command("/bin/bash", "-c", command)
     cmd.Stdin = os.Stdin
     cmd.Stderr = os.Stderr
@@ -186,7 +185,7 @@ func runCmd(string command) (string, error) {
         return "Could not wait for command", err
         if exitError, ok := err.(*exec.ExitError); ok {
 	    if ec := exitError.ExitCode(); ec != 0 {
-	        return Sprintf("Exit code was %d", ec), exitError
+	        return fmt.Sprintf("Exit code was %d", ec), exitError
 	    }
         }
     }
