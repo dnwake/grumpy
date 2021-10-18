@@ -47,7 +47,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 	     	return false, err.Error(), nil
         }
 	var patches []patch.PatchOperation
-	metadata := map[string]string {}
+//	metadata := pod.Metadata.Annotations
 	re := regexp.MustCompile(":bad$")
 	for i, c := range pod.Spec.Containers {
 		fmt.Printf("Processing Container Image '%s\n", c.Image)
@@ -61,14 +61,16 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			annotation1Value := "true"
 			annotation2Path := fmt.Sprintf("container.%d.image.original", i)
 			annotation2Value := c.Image
-			metadata[annotation1Path] = annotation1Value
-	 		metadata[annotation2Path] = annotation2Value
+			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation1Path), annotation1Value)
+			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation2Path), annotation2Value)
+//			metadata[annotation1Path] = annotation1Value
+//	 		metadata[annotation2Path] = annotation2Value
 			fmt.Printf("%s\n", annotationMessage)
 		}
 	}
-	if patches != nil && len(patches) > 0 {
-			patches = append(patches, patch.AddPatchOperation("/metadata/annotations", metadata))
-	}	
+//	if patches != nil && len(patches) > 0 {
+//			patches = append(patches, patch.AddPatchOperation("/metadata/annotations", metadata))
+//	}	
  	return true, "", patches
 }
 
