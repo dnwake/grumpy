@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"git.dev.box.net/skynet/grumpy/patch/patch"
+	"git.dev.box.net/skynet/grumpy/pkg/patch"
 
 	"go.uber.org/zap"
 	admissionv1 "k8s.io/api/admission/v1"
