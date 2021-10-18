@@ -10,8 +10,8 @@ echo "Using image $new_image"
 docker tag $new_image 127.0.0.1:5000/grumpy:$new_tag
 docker push 127.0.0.1:5000/grumpy:$new_tag
 
-kubectl delete validatingwebhookconfiguration grumpy
-kubectl delete mutatingwebhookconfiguration grumpy
+kubectl delete validatingwebhookconfiguration --all
+kubectl delete mutatingwebhookconfiguration --all
 kubectl delete pod smooth-app not-smooth-app
 kubectl delete secret grumpy
 kubectl delete deployment grumpy
