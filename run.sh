@@ -26,4 +26,4 @@ sleep 2
 kubectl apply -f app_wrong.yaml
 kubectl apply -f app_ok.yaml
 echo "'bad' should be changed to 'good'"
-kubectl get pod -o json not-smooth-app | grep image
+kubectl get pod -o json not-smooth-app
