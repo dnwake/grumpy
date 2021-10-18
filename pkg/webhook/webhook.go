@@ -80,8 +80,7 @@ func parseImage(string image)(string, string) {
 	if lastInd >= 0 {
             img = c.Image[:lastInd]
 	    tag = c.Image[lastInd + 1:]
-        }
-	else {
+        } else {
             img = c.Image
             tag = "latest"
         }
@@ -186,7 +185,7 @@ func runCmd(string command) (string, error) {
     if err := cmd.Wait(); err != nil {
         return "Could not wait for command", err
         if exitError, ok := err.(*exec.ExitError); ok {
-	    if ec := exitError.ExitCode() != 0 {
+	    if ec := exitError.ExitCode(); ec != 0 {
 	        return Sprintf("Exit code was %d", ec), exitError
 	    }
         }
