@@ -5,12 +5,12 @@ metadata:
 spec:
   containers:
   - image: container1:good
-    name: container1_good
+    name: container1-good
   - image: container2:bad
-    name: container2_good
+    name: container2-good
   - image: container3:badddd
-    name: container3_badddd
+    name: container3-badddd
   - image: container4:bad
-    name: container4_good
+    name: container4-good
   - image: container5bad:xxx
-    name: container5bad:xxx
+    name: container5bad-xxx
