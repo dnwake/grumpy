@@ -8,7 +8,7 @@ spec:
     name: container1-good
   - image: container2:bad
     name: container2-good
-  - image: container3:badddd
+  - image: box-registry.jfrog.io/jenkins/wall-e:19e3b090ddce-2019.06.19_13.14.17
     name: container3-badddd
   - image: container4:bad
     name: container4-good
