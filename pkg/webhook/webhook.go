@@ -89,7 +89,7 @@ func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview ad
 			return
 		}
 		outgoingReview.Response.Patch = patchBytes
-		outgoingReview.Response.PatchType = admissionv1.PatchTypeJSONPatch
+		outgoingReview.Response.PatchType = &admissionv1.PatchTypeJSONPatch
 	}
 
 	response, err := json.Marshal(outgoingReview)
