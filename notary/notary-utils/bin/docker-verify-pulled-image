@@ -1,0 +1,46 @@
+#!/bin/bash
+
+### Usage: docker-verify-pulled-image IMAGE
+
+## Verifies that the specified image
+##  is identical to the image originally pushed
+##  using docker-push-artifactory.
+
+## Environment variables:
+## NOTARY_URL must be set to the URL of the Notary server
+## NOTARY_CLIENT must be set to the path of the Notary client
+
+BASEDIR="$(cd $(dirname "${0}"); pwd)"
+
+print_usage() {
+    cat << EOF
+Usage: docker-verify-pulled-image remote_repo:remote_tag
+
+See the manpage for more information.
+EOF
+}
+
+get_image_id() {
+    local image_ref="$1"
+    invoke_docker inspect --type image --format '{{.Id}}' "$image_ref" || \
+        fail "Image integrity verification failed for ${image_ref}: Unable to get local image ID for '${image_ref}'"
+}
+
+main() {
+    if test "$1" == "--help" || test -z "$1"; then
+        print_usage
+        exit 1
+    fi
+    source "${BASEDIR}/../lib/notary-util"
+    local image_ref="${1}"
+    local repo="$(echo "${image_ref}" | grep -oP "^.*(?=:[^:]+$)")"
+    local tag="$(echo "$image_ref" | grep -oP "[^:]+$")"
+    local original_id="$(get_image_id "${image_ref}")"
+    pull "${repo}" "${tag}" || fail "Image integrity violation for ${image_ref}: No trusted image found (local image ID ${original_id})"
+    local new_id="$(get_image_id "${image_ref}")"
+    if test "${new_id}" != "${original_id}"; then
+        fail "Image integrity violation for ${image_ref}:  local image (ID ${original_id}) differed from trusted image (ID ${new_id})"
+    fi
+}
+
+main "${@}"
