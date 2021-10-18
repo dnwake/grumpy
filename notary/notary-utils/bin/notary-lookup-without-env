@@ -1,0 +1,28 @@
+#!/bin/bash
+
+## Looks up a digest,using Notary
+## trust-pinning to guarantee that the image is
+## the same as the image that was originally pushed to
+## Artifactory using docker-push-artifactory
+
+## Command-line arguments:
+##    $1 the remote Docker registry repo, including the host
+##    $2 the remote tag
+
+print_usage() {
+    cat << EOF
+Usage: notary-lookup-without-env remote_repo remote_tag
+
+See the manpage for more information.
+EOF
+}
+
+if test $# -ne 2 || test "$1" == "--help"; then
+    print_usage
+    exit 1
+fi
+
+export NOTARY_CLIENT=/usr/bin/notary
+export TRUST_PINNING_CERT=/usr/local/notary-utils/trust_pinning.crt
+export NOTARY_URL=https://notaryserver.jfrog.com:443
+"$(cd $(dirname "$0")/; pwd)/notary-lookup" "$@"
