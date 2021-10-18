@@ -89,11 +89,10 @@ func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview ad
 			return
 		}
 		outgoingReview.Response.Patch = patchBytes
-		outgoingReview.Response.PatchType = "JSONPatch"
-//		outgoingReview.Response.PatchType = &admissionv1.PatchType {
-//			Code:    admissionv1.PatchTypeJSONPatch,
-//			Message: message,
-//		}
+
+		// See https://stackoverflow.com/questions/35146286/find-address-of-constant-in-go
+                patchType := admissionv1.PatchTypeJSONPatch
+		outgoingReview.Response.PatchType = &patchType
 	}
 
 	response, err := json.Marshal(outgoingReview)
