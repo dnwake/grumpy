@@ -61,8 +61,8 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			annotation1Value := "true"
 			annotation2Path := fmt.Sprintf("container.%d.image.original", i)
 			annotation2Value := c.Image
-			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation1Path), annotation1Value)
-			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation2Path), annotation2Value)
+			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation1Path), annotation1Value))
+			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation2Path), annotation2Value))
 //			metadata[annotation1Path] = annotation1Value
 //	 		metadata[annotation2Path] = annotation2Value
 			fmt.Printf("%s\n", annotationMessage)
