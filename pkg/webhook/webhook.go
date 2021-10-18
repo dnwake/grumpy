@@ -62,7 +62,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			annotation2Value := c.Image
 			metadata := map[string]string {
 				 annotation1Path: annotation1Value,
-				 annotation2Path: annotation2Value
+				 annotation2Path: annotation2Value,
 	 		 }
 			patches = append(patches, patch.AddPatchOperation("/metadata/annotations", metadata))
 			fmt.Printf("%s\n", annotationMessage)
