@@ -80,11 +80,12 @@ func parseImage(image string) (string, string) {
 	if lastInd >= 0 {
             img := image[:lastInd]
 	    tag := image[lastInd + 1:]
+            return img, tag
         } else {
             img := image
             tag := "latest"
+            return img, tag	    
         }
-	return img, tag
 }
 
 
