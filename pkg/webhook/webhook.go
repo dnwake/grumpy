@@ -59,7 +59,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotationPath), annotationMessage))
 			fmt.Printf(annotationMessage)
                 } else {
-		        newImage := output
+		        newImage := fmt.Sprintf("%s@%s", img, strings.TrimSpace(output))
 			path := fmt.Sprintf("/spec/containers/%d/image", i)
 		    	patches = append(patches, patch.ReplacePatchOperation(path, newImage))
 			annotationMessage := fmt.Sprintf("Image modified from '%s' to '%s' by mutation webhook\n", c.Image, newImage)
