@@ -49,18 +49,16 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 	     	return false, err.Error(), nil
         }
 	var patches []patch.PatchOperation
-//	re := regexp.MustCompile(":bad$")
 	for i, c := range pod.Spec.Containers {
 		fmt.Printf("Processing Container Image '%s\n", c.Image)
 		img, tag = parseImage(c.Image)
 		cmd = Sprintf("/usr/local/notary-utils/notary-utils/bin/notary-lookup-without-env %s %s", img, tag)
-		if output, err := run_cmd(cmd); err != nil {
+		if output, err := runCmd(cmd); err != nil {
 			annotationMessage := fmt.Sprintf("Unable to look up digest for image '%s'; error was '%s'\n", c.Image, err.Error())
 			annotationPath := fmt.Sprintf("container.%d.image.error", i)
 			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotationPath), annotationValue))
 			fmt.Printf(annotationMessage)
-                }
-                else {
+                } else {
 		        newImage := output
 			path := fmt.Sprintf("/spec/containers/%d/image", i)
 		    	patches = append(patches, patch.ReplacePatchOperation(path, newImage))
@@ -74,9 +72,6 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			fmt.Printf("%s\n", annotationMessage)
 		}
 	}
-//	if patches != nil && len(patches) > 0 {
-//			patches = append(patches, patch.AddPatchOperation("/metadata/annotations", metadata))
-//	}	
  	return true, "", patches
 }
 
@@ -177,7 +172,7 @@ func parsePod(object []byte) (*v1.Pod, error) {
 	return &pod, nil
 }
 
-func run_cmd(string command) (string, error) {
+func runCmd(string command) (string, error) {
     cmd := exec.Command("/bin/bash", "-c", command)
     cmd.Stdin = os.Stdin
     cmd.Stderr = os.Stderr
