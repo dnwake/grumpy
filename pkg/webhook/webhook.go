@@ -41,6 +41,7 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 }	
 
 func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, string, []patch.PatchOperation) {
+	zap.L().Info("Processing Request")
 	pod, err := parsePod(admissionRequest.Object.Raw)
 	if err != nil {
 	     	return false, err.Error(), nil
@@ -48,6 +49,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 	var patches []patch.PatchOperation
 	re := regexp.MustCompile(":bad$")
 	for i, c := range pod.Spec.Containers {
+		zap.L().Info("Processing Container Image", zap.Info(c.Image))
 	    	if re.MatchString(c.Image) {
 		        newImage := re.ReplaceAllString(c.Image, ":good")
 			path := fmt.Sprintf("/spec/containers/%d/image", i)
@@ -56,6 +58,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			annotationMessage := fmt.Sprintf("Image modified from '%s' to '%s' by mutation webhook", c.Image, newImage)
 			annotationPath := fmt.Sprintf("/metadata/annotations/image.%d.modification", i)
 			patches = append(patches, patch.AddPatchOperation(annotationPath, annotationMessage))
+			zap.L().Info(annotationMessage)
 		}
 	}
  	return true, "", patches
