@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"regexp"
+	"fmt"	
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -39,7 +40,7 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, message, patches)
 }	
 
-func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, string, []patch.Patch) {
+func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, string, []patch.PatchOperation) {
 	pod, err := parsePod(admissionRequest.Object.Raw)
 	if err != nil {
 	     	return false, err.Error(), nil
@@ -83,8 +84,9 @@ func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview ad
 	if patches != nil && len(patches) > 0 {
 		patchBytes, err := json.Marshal(patches)
 		if err != nil {
-			log.Error(err)
-			http.Error(w, fmt.Sprintf("could not marshal JSON patch: %v", err), http.StatusInternalServerError)
+			zap.L().Error("Error in marshaling outgoing admission review, returning 500", zap.Error(err))
+         		w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 		outgoingReview.Response.Patch = patchBytes
 	}
