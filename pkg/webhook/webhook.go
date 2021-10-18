@@ -183,17 +183,17 @@ func runCmd(command string) (string, error) {
     if err := cmd.Start(); err != nil {
         return "Could not start command", err
     }
-    if err := cmd.Wait(); err != nil {
-        return "Could not wait for command", err
-        if exitError, ok := err.(*exec.ExitError); ok {
-	    if ec := exitError.ExitCode(); ec != 0 {
-	        return fmt.Sprintf("Exit code was %d", ec), exitError
-	    }
-        }
-    }
     bytes, err := ioutil.ReadAll(stdOut)
     if err != nil {
         return "Could not read output", err
+    }
+    if err := cmd.Wait(); err != nil {
+        return fmt.Sprintf("Could not wait for command; output was '%s'", string(bytes)), err
+        if exitError, ok := err.(*exec.ExitError); ok {
+	    if ec := exitError.ExitCode(); ec != 0 {
+	        return fmt.Sprintf("Exit code was %d; output was '%s'", ec, string(bytes)), exitError
+	    }
+        }
     }
     return string(bytes), nil
 }
