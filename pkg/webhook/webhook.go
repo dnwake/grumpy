@@ -55,7 +55,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 		img, tag = parseImage(c.Image)
 		cmd = Sprintf("/usr/local/notary-utils/notary-utils/bin/notary-lookup-without-env %s %s", img, tag)
 		if output, err := run_cmd(cmd); err != nil {
-			annotationMessage := fmt.Sprintf("Unable to look up digest for image '%s'; error was '%s'\n", c.Image, err.Error()))
+			annotationMessage := fmt.Sprintf("Unable to look up digest for image '%s'; error was '%s'\n", c.Image, err.Error())
 			annotationPath := fmt.Sprintf("container.%d.image.error", i)
 			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotationPath), annotationValue))
 			fmt.Printf(annotationMessage)
