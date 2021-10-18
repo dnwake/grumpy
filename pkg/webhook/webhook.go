@@ -1,7 +1,8 @@
 package webhook
 
 import (
-	"fmt"	
+	"fmt"
+	"strings"	
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -55,7 +56,7 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 		if output, err := runCmd(cmd); err != nil {
 			annotationMessage := fmt.Sprintf("Unable to look up digest for image '%s'; error was '%s'\n", c.Image, err.Error())
 			annotationPath := fmt.Sprintf("container.%d.image.error", i)
-			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotationPath), annotationValue))
+			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotationPath), annotationMessage))
 			fmt.Printf(annotationMessage)
                 } else {
 		        newImage := output
@@ -77,11 +78,11 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 func parseImage(image string) (string, string) {
 	lastInd := strings.LastIndex(image, ":")
 	if lastInd >= 0 {
-            img = c.Image[:lastInd]
-	    tag = c.Image[lastInd + 1:]
+            img := image[:lastInd]
+	    tag := image[lastInd + 1:]
         } else {
-            img = c.Image
-            tag = "latest"
+            img := image
+            tag := "latest"
         }
 	return img, tag
 }
