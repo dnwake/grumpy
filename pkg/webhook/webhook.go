@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+        "os"
+        "os/exec"	
 
 	"git.dev.box.net/skynet/grumpy/pkg/patch"
 
@@ -47,15 +49,21 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 	     	return false, err.Error(), nil
         }
 	var patches []patch.PatchOperation
-//	metadata := pod.Metadata.Annotations
-	re := regexp.MustCompile(":bad$")
+//	re := regexp.MustCompile(":bad$")
 	for i, c := range pod.Spec.Containers {
 		fmt.Printf("Processing Container Image '%s\n", c.Image)
-	    	if re.MatchString(c.Image) {
-		        newImage := re.ReplaceAllString(c.Image, ":good")
+		img, tag = parseImage(c.Image)
+		cmd = Sprintf("/usr/local/notary-utils/notary-utils/bin/notary-lookup-without-env %s %s", img, tag)
+		if output, err := run_cmd(cmd); err != nil {
+			annotationMessage := fmt.Sprintf("Unable to look up digest for image '%s'; error was '%s'\n", c.Image, err.Error()))
+			annotationPath := fmt.Sprintf("container.%d.image.error", i)
+			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotationPath), annotationValue))
+			fmt.Printf(annotationMessage)
+                }
+                else {
+		        newImage := output
 			path := fmt.Sprintf("/spec/containers/%d/image", i)
 		    	patches = append(patches, patch.ReplacePatchOperation(path, newImage))
-
 			annotationMessage := fmt.Sprintf("Image modified from '%s' to '%s' by mutation webhook\n", c.Image, newImage)
 			annotation1Path := fmt.Sprintf("container.%d.image.mutated", i)
 			annotation1Value := "true"
@@ -63,8 +71,6 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 			annotation2Value := c.Image
 			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation1Path), annotation1Value))
 			patches = append(patches, patch.AddPatchOperation(fmt.Sprintf("/metadata/annotations/%s", annotation2Path), annotation2Value))
-//			metadata[annotation1Path] = annotation1Value
-//	 		metadata[annotation2Path] = annotation2Value
 			fmt.Printf("%s\n", annotationMessage)
 		}
 	}
@@ -73,6 +79,20 @@ func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, stri
 //	}	
  	return true, "", patches
 }
+
+func parseImage(string image)(string, string) {
+	lastInd := strings.LastIndex(image, ":")
+	if lastInd >= 0 {
+            img = c.Image[:lastInd]
+	    tag = c.Image[lastInd + 1:]
+        }
+	else {
+            img = c.Image
+            tag = "latest"
+        }
+	return img, tag
+}
+
 
 // writeAdmitResponse sends an allowed or disallowed response with additional message to the given admission request.
 func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview admissionv1.AdmissionReview, isAllowed bool, message string, patches []patch.PatchOperation) {
@@ -155,4 +175,30 @@ func parsePod(object []byte) (*v1.Pod, error) {
 	}
 
 	return &pod, nil
+}
+
+func run_cmd(string command) (string, error) {
+    cmd := exec.Command("/bin/bash", "-c", command)
+    cmd.Stdin = os.Stdin
+    cmd.Stderr = os.Stderr
+    stdOut, err := cmd.StdoutPipe()
+    if err != nil {
+        return "Could not set up stdout pipe", err
+    }
+    if err := cmd.Start(); err != nil {
+        return "Could not start command", err
+    }
+    if err := cmd.Wait(); err != nil {
+        return "Could not wait for command", err
+        if exitError, ok := err.(*exec.ExitError); ok {
+	    if ec := exitError.ExitCode() != 0 {
+	        return Sprintf("Exit code was %d", ec), exitError
+	    }
+        }
+    }
+    bytes, err := ioutil.ReadAll(stdOut)
+    if err != nil {
+        return "Could not read output", err
+    }
+    return string(bytes), nil
 }
