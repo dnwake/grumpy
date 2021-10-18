@@ -1,10 +1,12 @@
 package webhook
 
 import (
-	"strings"
+	"regexp"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+
+	"git.dev.box.net/skynet/grumpy/patch/patch"
 
 	"go.uber.org/zap"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -33,25 +35,29 @@ func (gs *GrumpyServerHandler) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	admissionRequest := admissionReview.Request
-	admit, message := processRequest(admissionRequest)
-	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, message)
+	admit, message, patches := processRequest(admissionRequest)
+	writeAdmitResponse(w, http.StatusOK, admissionReview, admit, message, patches)
 }	
 
-func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, string) {
+func processRequest (admissionRequest *admissionv1.AdmissionRequest) (bool, string, []patch.Patch) {
 	pod, err := parsePod(admissionRequest.Object.Raw)
 	if err != nil {
-	     	return false, err.Error()
+	     	return false, err.Error(), nil
         }
-	for _, c := range pod.Spec.Containers {
-	    	if strings.HasSuffix(c.Image, ":bad") {
-		    	return false, "You cannot use the tag 'bad' in a container."
+	var patches []patch.PatchOperation
+	re := regexp.MustCompile(":bad$")
+	for i, c := range pod.Spec.Containers {
+	    	if re.MatchString(c.Image) {
+		        newImage := re.ReplaceAllString(c.Image, ":good")
+			path := fmt.Sprintf("/spec/containers/%d/image", i)
+		    	patches = append(patches, patch.ReplacePatchOperation(path, newImage))
 		}
 	}
- 	return true, ""
+ 	return true, "", patches
 }
 
 // writeAdmitResponse sends an allowed or disallowed response with additional message to the given admission request.
-func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview admissionv1.AdmissionReview, isAllowed bool, message string) {
+func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview admissionv1.AdmissionReview, isAllowed bool, message string, patches []patch.PatchOperation) {
 	w.Header().Set("Content-Type", "application/json")
 
 	outgoingReview := admissionv1.AdmissionReview{
@@ -71,6 +77,16 @@ func writeAdmitResponse(w http.ResponseWriter, statusCode int, incomingReview ad
 			Code:    http.StatusForbidden,
 			Message: message,
 		}
+	}
+
+	// set the patch operations for mutating admission
+	if patches != nil and len(patches) > 0 {
+		patchBytes, err := json.Marshal(patches)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, fmt.Sprintf("could not marshal JSON patch: %v", err), http.StatusInternalServerError)
+		}
+		outgoingReview.Response.Patch = patchBytes
 	}
 
 	response, err := json.Marshal(outgoingReview)
