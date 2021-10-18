@@ -38,7 +38,7 @@ spec:
             - runascontainer
             - /usr/bin/bash
             - -c
-            - ( ./usr/bin/grumpy ) 2>&1 | tee /var/log/grumpy.log
+            -  ./usr/bin/grumpy 2>&1 | tee /home/container/grumpy.log
           env:
             - name: POD_NAME
               valueFrom:
